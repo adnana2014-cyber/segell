@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>سجلّ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-first single column; tracker chips on top, two tabs (today / year); compact year map, horizontal like a contribution graph or vertical */
+:root {
+  --bg: #f8f7f5;
+  --surface: #ffffff;
+  --fg: #1f1f1f;
+  --muted: #8a8a8a;
+  --line: #e6e5e2;
+  --accent: #3f8a55;
+  --accent-fg: #ffffff;
+  --danger: #c8463d;
+  --empty: #ebebea;
+  --ink: #1f1f1f;
+  --ink-hi: #ffffff;
+  --v1: #c8463d; --v2: #d8613f; --v3: #e47e42; --v4: #eb9e49; --v5: #efbf4f;
+  --v6: #d2c255; --v7: #aebb59; --v8: #87ac5a; --v9: #619b57; --v10: #3f8a55;
+  /* Thmanyah is used when it is installed on the device (its licence does not allow serving the files from a page) */
+  --display: "Thmanyah Sans", "ثمانية", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --body: "Thmanyah Sans", "ثمانية", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141414; --surface: #1d1d1c; --fg: #ecebe8; --muted: #9a9995; --line: #2e2d2b;
+  --accent: #5fae74; --accent-fg: #101010; --danger: #e86a5f; --empty: #2a2a28; --ink: #141414; --ink-hi: #141414;
+  --v1: #d9574d; --v2: #df7050; --v3: #e58b51; --v4: #e9a654; --v5: #ebc25a;
+  --v6: #cfc35f; --v7: #abbe63; --v8: #88b366; --v9: #68a568; --v10: #4f9866; color-scheme: dark } }
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+button { touch-action: manipulation; }
+.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.wrap.withbar { padding-bottom: 210px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 1.5rem; margin: 0; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+h1 span { color: var(--accent); }
+.tabs, .seg { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 4px; flex: none; }
+.tabs a, .seg button { text-decoration: none; color: var(--muted); padding: 6px 16px; border-radius: 999px; font: inherit; font-weight: 500; background: none; border: 0; cursor: pointer; }
+.seg button { padding: 3px 12px; font-size: .85rem; }
+.tabs a[aria-current="page"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.muted { color: var(--muted); }
+.status { font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status.warn { color: var(--danger); }
+
+/* Trackers */
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-weight: 500; font-size: .95rem; padding: 7px 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.chip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip.add { color: var(--accent); border-style: dashed; }
+.panel { display: flex; flex-direction: column; gap: 10px; }
+.panel label { font-weight: 600; font-size: .95rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.txt { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 16px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.num { width: 64px; flex: none; text-align: center; }
+.dt { flex: 1 1 130px; }
+.btn { font: inherit; font-weight: 600; border-radius: 10px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+.btn.danger { background: var(--danger); color: var(--surface); border-color: transparent; }
+.err { color: var(--danger); font-size: .85rem; min-height: 1.2em; }
+.linkbtn { background: none; border: 0; color: var(--accent); font: inherit; font-size: .9rem; cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+.linkbtn.danger { color: var(--danger); }
+.center { display: flex; justify-content: center; }
+
+/* Today */
+.sectiontitle { font-weight: 600; margin: 0 0 10px; font-size: 1rem; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.wk { border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 7px 0; text-align: center; cursor: pointer; font: inherit; color: var(--fg); display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.wk.open { border-style: dashed; border-color: var(--accent); }
+.wk small { color: var(--muted); font-size: .7rem; white-space: nowrap; }
+.wk b { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: .9rem; background: var(--empty); color: var(--muted); font-variant-numeric: tabular-nums; }
+.vt { color: var(--ink) !important; }
+.vt.v1, .vt.v10 { color: var(--ink-hi) !important; }
+.entry { display: flex; flex-direction: column; gap: 10px; }
+.entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.entry-head .wd { font-family: var(--display); font-size: 1.35rem; font-weight: 700; line-height: 1.3; }
+.entry-head .dt2 { color: var(--muted); font-size: .85rem; }
+.entry .note { font-size: .82rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; direction: ltr; }
+.scale button { aspect-ratio: 1.3; max-width: 100%; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; font-weight: 600; font-size: 1.1rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.scale button.on { border-color: transparent; }
+.scale.compact { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.scale.compact button { aspect-ratio: auto; height: 38px; font-size: .95rem; border-radius: 9px; }
+.ends { display: flex; justify-content: space-between; direction: ltr; font-size: .75rem; color: var(--muted); }
+.allset { text-align: center; color: var(--muted); padding: 6px 0; }
+
+/* Year */
+.yearbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.yearbar .yr { font-family: var(--display); font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.yearnav { display: flex; align-items: center; gap: 8px; }
+.iconbtn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-size: 1.2rem; cursor: pointer; display: grid; place-items: center; flex: none; }
+.iconbtn:disabled { opacity: .35; cursor: default; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.stat .v { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: .7rem; color: var(--muted); line-height: 1.3; }
+.maptop { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.mapscroll { overflow-x: auto; padding-bottom: 4px; }
+/* horizontal: weeks as columns, Sun..Sat rows */
+.hmap { display: grid; grid-template-columns: auto auto; gap: 4px 6px; width: max-content; }
+.hmap .months { grid-column: 2; position: relative; height: 16px; font-size: .7rem; color: var(--muted); }
+.hmap .months span { position: absolute; top: 0; white-space: nowrap; }
+.hmap .dl { grid-column: 1; display: grid; grid-template-rows: repeat(7, 11px); gap: 3px; font-size: .62rem; color: var(--muted); line-height: 11px; }
+.hmap .grid { grid-column: 2; display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 3px; }
+/* vertical: weekdays across, weeks down, months at the side */
+.vmap { display: grid; grid-template-columns: 44px repeat(7, 13px); gap: 3px; width: max-content; margin: 0 auto; }
+.vmap .hd { font-size: .6rem; color: var(--muted); text-align: center; line-height: 1.2; }
+.vmap .mo { font-size: .66rem; color: var(--muted); line-height: 13px; white-space: nowrap; }
+.cell { width: 11px; height: 11px; border-radius: 2px; background: var(--empty); border: 0; padding: 0; cursor: pointer; }
+.vmap .cell { width: 13px; height: 13px; }
+.cell.out { visibility: hidden; }
+.cell.today { outline: 1.5px solid var(--fg); outline-offset: 1px; }
+.cell.future { opacity: .4; cursor: default; }
+.cell.sel { outline: 2px solid var(--danger); outline-offset: 0; }
+.v1 { background: var(--v1) !important; } .v2 { background: var(--v2) !important; } .v3 { background: var(--v3) !important; } .v4 { background: var(--v4) !important; } .v5 { background: var(--v5) !important; } .v6 { background: var(--v6) !important; } .v7 { background: var(--v7) !important; } .v8 { background: var(--v8) !important; } .v9 { background: var(--v9) !important; } .v10 { background: var(--v10) !important; }
+.legend { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: .78rem; color: var(--muted); }
+.legend .sw { display: flex; align-items: center; gap: 3px; }
+.swatches { display: flex; gap: 2px; direction: ltr; }
+.legend i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; background: var(--empty); }
+.quick { display: flex; flex-direction: column; gap: 8px; }
+.quick .row { font-size: .9rem; }
+
+.bulkbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(20, 22, 50, .12); padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bulkbar .in { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.bulkbar .scale { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.bulkbar .scale button { aspect-ratio: auto; height: 40px; font-size: 1rem; border-radius: 9px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="wrap" dir="rtl" lang="ar">
+  <header>
+    <h1 id="appTitle">سجلّ</h1>
+    <nav class="tabs" aria-label="الصفحات">
+      <a href="#today" id="tab-today">اليوم</a>
+      <a href="#year" id="tab-year">السنة</a>
+    </nav>
+  </header>
+
+  <div class="chips" id="chips" aria-label="الخرائط"></div>
+
+  <div class="card panel" id="addPanel" hidden>
+    <label for="newName">اسم الخريطة الجديدة</label>
+    <div class="row">
+      <input class="txt" id="newName" maxlength="40" placeholder="مثلاً: الرياضة، المزاج، القراءة" autocomplete="off">
+      <button class="btn primary" id="addSave">إضافة</button>
+      <button class="btn" id="addCancel">إلغاء</button>
+    </div>
+    <div class="err" id="addErr"></div>
+  </div>
+
+  <div class="card panel" id="editPanel" hidden>
+    <label for="editName">اسم الخريطة</label>
+    <div class="row">
+      <input class="txt" id="editName" maxlength="40" autocomplete="off">
+      <button class="btn primary" id="editSave">حفظ الاسم</button>
+      <button class="btn" id="editCancel">إغلاق</button>
+    </div>
+    <div class="err" id="editErr"></div>
+    <div id="delArea">
+      <button class="linkbtn danger" id="delAsk">حذف هذه الخريطة وكل تقييماتها</button>
+      <div class="row" id="delConfirm" hidden>
+        <span>متأكد؟ لا يمكن التراجع عن الحذف.</span>
+        <button class="btn danger" id="delYes">نعم، احذف</button>
+        <button class="btn" id="delNo">تراجع</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="view-today">
+    <div class="card">
+      <p class="sectiontitle">آخر ٧ أيام</p>
+      <div class="week" id="week"></div>
+    </div>
+    <div id="entries" style="display:flex;flex-direction:column;gap:14px;margin-top:14px"></div>
+    <div class="center"><button class="linkbtn" id="editOpen">تعديل اسم الخريطة أو حذفها</button></div>
+  </section>
+
+  <section id="view-year" hidden>
+    <div class="yearbar">
+      <div class="yr" id="yr"></div>
+      <div class="yearnav">
+        <button class="iconbtn" id="prevYear" aria-label="السنة السابقة">›</button>
+        <button class="iconbtn" id="nextYear" aria-label="السنة التالية">‹</button>
+      </div>
+    </div>
+    <div class="stats" style="margin-top:10px">
+      <div class="stat"><div class="v" id="sAvg">–</div><div class="k">متوسط السنة</div></div>
+      <div class="stat"><div class="v" id="s30">–</div><div class="k">آخر ٣٠ يوماً</div></div>
+      <div class="stat"><div class="v" id="sDays">0</div><div class="k">أيام مسجلة</div></div>
+      <div class="stat"><div class="v" id="sGood">0</div><div class="k">8 فأكثر</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="maptop">
+        <span class="muted" style="font-size:.85rem">اضغط يوماً أو أكثر لتعديلها</span>
+        <div class="seg" role="group" aria-label="اتجاه الخريطة">
+          <button id="lay-h" aria-pressed="true">أفقي</button>
+          <button id="lay-v" aria-pressed="false">عمودي</button>
+        </div>
+      </div>
+      <div class="mapscroll" id="mapscroll"></div>
+      <div class="legend">
+        <span></span>
+        <span class="sw">أسوأ <span class="swatches"><i class="v1"></i><i class="v2"></i><i class="v3"></i><i class="v4"></i><i class="v5"></i><i class="v6"></i><i class="v7"></i><i class="v8"></i><i class="v9"></i><i class="v10"></i></span> أفضل</span>
+      </div>
+    </div>
+    <div class="card quick" style="margin-top:12px">
+      <p class="sectiontitle" style="margin:0">تعديل عدة أيام دفعة واحدة</p>
+      <div class="row">
+        <span>آخر</span>
+        <input class="txt num" id="lastN" type="number" min="1" max="366" value="7" inputmode="numeric" aria-label="عدد الأيام">
+        <span>يوماً</span>
+        <button class="btn" id="pickLast">تحديد</button>
+      </div>
+      <div class="row">
+        <span>من</span><input class="txt dt" id="fromD" type="date" aria-label="من تاريخ">
+        <span>إلى</span><input class="txt dt" id="toD" type="date" aria-label="إلى تاريخ">
+        <button class="btn" id="pickRange">تحديد</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="status" id="status"></div>
+</div>
+
+<div class="bulkbar" id="bulkbar" dir="rtl" lang="ar" hidden>
+  <div class="in">
+    <div class="row" style="justify-content:space-between">
+      <b id="selCount"></b>
+      <div class="row">
+        <button class="linkbtn danger" id="selClear">مسح التقييم</button>
+        <button class="btn" id="selCancel">إلغاء</button>
+      </div>
+    </div>
+    <div class="scale" id="bulkScale"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var LS_KEY = "tracker-store-v3", LS_CUR = "tracker-current", LS_LAY = "map-layout";
+  var WD = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  var WD_SHORT = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+  var MO = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  var VERDICT = ["", "سيئ جداً", "سيئ جداً", "سيئ", "سيئ", "متوسط", "متوسط", "جيد", "جيد جداً", "ممتاز", "ممتاز"];
+  var hijriFmt = null;
+  try { hijriFmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "long", year: "numeric" }); } catch (e) {}
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- store: every tracker and every tracker-year is its own document, so one write never overwrites another ----
+  // "tr_<id>" {name, created, ts}; year docs: "2026" (sleep) or "<id>_2026" {tracker, year, ratings, ts}
+  var docs = {}, localTs = {}, confirmed = {}, tomb = {};
+  var current = "sleep", layout = "h", viewYear = new Date().getFullYear();
+  var reopened = {}, selection = {}, scrollPending = true;
+  var db = null, uid = null;
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function keyOf(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseKey(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function todayKey() { return keyOf(new Date()); }
+  function addDays(k, n) { var d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); }
+  function level(v) { return v ? Math.ceil(v / 2) : 0; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  var YEAR_RE = /^(?:(t[a-z0-9]+)_)?(\d{4})$/;
+  function yearDocId(tid, y) { return tid === "sleep" ? String(y) : tid + "_" + y; }
+
+  function trackers() {
+    var list = [{ id: "sleep", name: (docs.tr_sleep && docs.tr_sleep.name) || "النوم", created: 0 }];
+    for (var id in docs) if (id.indexOf("tr_") === 0 && id !== "tr_sleep") list.push({ id: id.slice(3), name: docs[id].name, created: docs[id].created || 0 });
+    return list.sort(function (a, b) { return a.created - b.created; });
+  }
+  function tracker(id) { return trackers().filter(function (t) { return t.id === id; })[0] || null; }
+  function ratingsOf(tid) {
+    var out = {};
+    for (var id in docs) { var m = id.match(YEAR_RE); if (m && (m[1] || "sleep") === tid) { var r = docs[id].ratings || {}; for (var k in r) out[k] = r[k]; } }
+    return out;
+  }
+
+  function setStatus(t, warn) { $("status").textContent = t || ""; $("status").className = "status" + (warn ? " warn" : ""); }
+  function readLocal() {
+    try {
+      var s = localStorage.getItem(LS_KEY);
+      if (s) { var o = JSON.parse(s); docs = o.docs || {}; localTs = o.localTs || {}; confirmed = o.confirmed || {}; }
+      else {
+        // bring over what earlier versions of this page kept on the device
+        var v2 = localStorage.getItem("trackers-v2"), v1 = localStorage.getItem("sleep-ratings-v1"), old = { trackers: [], data: {} };
+        if (v2) old = JSON.parse(v2) || old; else if (v1) old.data.sleep = JSON.parse(v1) || {};
+        (old.trackers || []).forEach(function (t, i) { if (t.id !== "sleep") { docs["tr_" + t.id] = { name: t.name, created: i + 1, ts: 0 }; localTs["tr_" + t.id] = 0; } });
+        for (var tid in (old.data || {})) for (var k in old.data[tid]) {
+          var id = yearDocId(tid, k.slice(0, 4));
+          docs[id] = docs[id] || { tracker: tid, year: +k.slice(0, 4), ratings: {}, ts: 0 };
+          docs[id].ratings[k] = old.data[tid][k]; localTs[id] = 0;
+        }
+      }
+      current = localStorage.getItem(LS_CUR) || current;
+      layout = localStorage.getItem(LS_LAY) || layout;
+    } catch (e) {}
+    if (!tracker(current)) current = "sleep";
+  }
+  function writeLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ docs: docs, localTs: localTs, confirmed: confirmed })); localStorage.setItem(LS_CUR, current); localStorage.setItem(LS_LAY, layout); } catch (e) {}
+  }
+
+  var dirty = {}, inflight = null, timer = null;
+  function touch(id) {
+    var ts = Math.max(Date.now(), (localTs[id] || 0) + 1);
+    docs[id].ts = ts; localTs[id] = ts; delete tomb[id];
+    queue(id, "set");
+  }
+  function remove(id) { delete docs[id]; tomb[id] = true; queue(id, "delete"); }
+  function queue(id, op) {
+    dirty[id] = op; writeLocal();
+    if (!db) return;
+    setStatus("جارٍ الحفظ…");
+    clearTimeout(timer); timer = setTimeout(flush, 400);
+  }
+  function flush() {
+    if (inflight || !db) return;
+    var ids = Object.keys(dirty);
+    if (!ids.length) { setStatus("تم الحفظ في حسابك ✓"); return; }
+    var id = ids[0], op = dirty[id]; delete dirty[id];
+    if (op === "set" && !docs[id]) { flush(); return; }
+    var ref = db.collection("data/users/" + uid).doc(id);
+    inflight = id;
+    (op === "delete" ? ref.delete() : ref.set(clone(docs[id])))
+      .then(function () {
+        inflight = null;
+        if (op === "delete") { delete confirmed[id]; delete localTs[id]; delete tomb[id]; } else confirmed[id] = true;
+        writeLocal(); flush();
+      })
+      .catch(function (e) {
+        inflight = null;
+        if (!(id in dirty)) dirty[id] = op;
+        setStatus(e && e.code === "quota_exceeded" ? "تعذّر الحفظ: امتلأت مساحة التخزين" : "تعذّر الحفظ في حسابك الآن، التقييمات محفوظة على هذا الجهاز وسأعيد المحاولة", true);
+        setTimeout(flush, 5000);
+      });
+  }
+
+  function setRatings(tid, keys, v) {
+    var t = todayKey(), changed = {};
+    keys.forEach(function (k) {
+      if (k > t) return;
+      var id = yearDocId(tid, k.slice(0, 4));
+      if (!docs[id]) { if (!v) return; docs[id] = { tracker: tid, year: +k.slice(0, 4), ratings: {} }; }
+      if (v) docs[id].ratings[k] = v; else delete docs[id].ratings[k];
+      changed[id] = true;
+    });
+    Object.keys(changed).forEach(touch);
+  }
+
+  // ---- tracker chips and panels ----
+  function renderChips() {
+    var c = $("chips"); c.innerHTML = "";
+    trackers().forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip" + (t.id === current ? " on" : ""); b.textContent = t.name;
+      b.setAttribute("aria-pressed", t.id === current);
+      b.onclick = function () { current = t.id; reopened = {}; selection = {}; writeLocal(); closePanels(); render(); };
+      c.appendChild(b);
+    });
+    var a = document.createElement("button");
+    a.type = "button"; a.className = "chip add"; a.textContent = "+ خريطة جديدة"; a.id = "addOpen";
+    a.onclick = function () { closePanels(); $("addPanel").hidden = false; $("newName").value = ""; $("addErr").textContent = ""; $("newName").focus(); };
+    c.appendChild(a);
+  }
+  function nameError(n, exceptId) {
+    if (!n) return "اكتب اسماً للخريطة";
+    if (trackers().some(function (t) { return t.name === n && t.id !== exceptId; })) return "يوجد خريطة بهذا الاسم";
+    return "";
+  }
+  function closePanels() { $("addPanel").hidden = true; $("editPanel").hidden = true; $("delConfirm").hidden = true; $("delAsk").hidden = false; }
+  function addTracker() {
+    var n = $("newName").value.trim(), err = nameError(n);
+    if (err) { $("addErr").textContent = err; return; }
+    var id = "t" + Date.now().toString(36);
+    docs["tr_" + id] = { name: n, created: Date.now() };
+    touch("tr_" + id);
+    current = id; reopened = {}; selection = {};
+    closePanels(); render();
+  }
+  $("addSave").onclick = addTracker;
+  $("newName").onkeydown = function (e) { if (e.key === "Enter") addTracker(); };
+  $("addCancel").onclick = closePanels;
+  $("editOpen").onclick = function () {
+    closePanels(); $("editPanel").hidden = false; $("editName").value = tracker(current).name; $("editErr").textContent = "";
+    $("delArea").hidden = current === "sleep";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  $("editCancel").onclick = closePanels;
+  $("editSave").onclick = function () {
+    var n = $("editName").value.trim(), err = nameError(n, current);
+    if (err) { $("editErr").textContent = err; return; }
+    var id = "tr_" + current;
+    docs[id] = docs[id] || { created: 0 };
+    docs[id].name = n; touch(id);
+    closePanels(); render();
+  };
+  $("delAsk").onclick = function () { $("delAsk").hidden = true; $("delConfirm").hidden = false; };
+  $("delNo").onclick = function () { $("delAsk").hidden = false; $("delConfirm").hidden = true; };
+  $("delYes").onclick = function () {
+    var tid = current;
+    Object.keys(docs).forEach(function (id) { var m = id.match(YEAR_RE); if (m && m[1] === tid) remove(id); });
+    remove("tr_" + tid);
+    current = "sleep"; closePanels(); render();
+  };
+
+  // ---- today view: last 7 days strip; today and any unrated day stay open as full entries ----
+  function scaleButtons(container, value, onPick) {
+    for (var i = 1; i <= 10; i++) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = i;
+      b.setAttribute("aria-label", "التقييم " + i);
+      if (i === value) { b.className = "on v" + i + " vt"; b.setAttribute("aria-pressed", "true"); }
+      (function (n) { b.onclick = function () { onPick(n); }; })(i);
+      container.appendChild(b);
+    }
+  }
+  function dayName(k) {
+    var t = todayKey(), d = parseKey(k);
+    return k === t ? "اليوم، " + WD[d.getDay()] : k === addDays(t, -1) ? "أمس، " + WD[d.getDay()] : WD[d.getDay()];
+  }
+  function renderToday() {
+    var r = ratingsOf(current), t = todayKey();
+    var w = $("week"); w.innerHTML = "";
+    var open = [], cr = tracker(current).created, since = cr ? keyOf(new Date(cr)) : "0";
+    for (var i = 6; i >= 0; i--) {
+      var k = addDays(t, -i), dd = parseKey(k), v = r[k];
+      // days before the tracker existed are not left open
+      var isOpen = k === t || reopened[k] || (!v && k >= since);
+      if (isOpen) open.push(k);
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "wk" + (isOpen ? " open" : ""); b.dataset.k = k;
+      var sm = document.createElement("small"); sm.textContent = WD_SHORT[dd.getDay()];
+      var num = document.createElement("small"); num.textContent = dd.getDate() + "/" + (dd.getMonth() + 1);
+      var bb = document.createElement("b"); bb.textContent = v || "–"; if (v) bb.className = "v" + v + " vt";
+      b.append(sm, bb, num);
+      b.title = isOpen ? "مفتوح للتسجيل" : "اضغط لتعديل هذا اليوم";
+      b.onclick = function () {
+        var key = this.dataset.k;
+        if (key !== todayKey() && ratingsOf(current)[key]) reopened[key] = true;
+        render();
+        var el = document.getElementById("entry-" + key); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      };
+      w.appendChild(b);
+    }
+    // newest first
+    open.reverse();
+    var box = $("entries"); box.innerHTML = "";
+    open.forEach(function (k) {
+      var v = r[k], d = parseKey(k);
+      var card = document.createElement("div"); card.className = "card entry"; card.id = "entry-" + k;
+      var head = document.createElement("div"); head.className = "entry-head";
+      var wd = document.createElement("div"); wd.className = "wd"; wd.textContent = dayName(k);
+      var dt = document.createElement("div"); dt.className = "dt2";
+      dt.textContent = d.getDate() + " " + MO[d.getMonth()] + (hijriFmt ? " · " + hijriFmt.format(d) : "");
+      head.append(wd, dt);
+      var sc = document.createElement("div"); sc.className = "scale" + (k === t ? "" : " compact");
+      scaleButtons(sc, v, function (n) {
+        setRatings(current, [k], n);
+        if (k !== todayKey()) delete reopened[k];
+        render();
+      });
+      card.append(head, sc);
+      box.appendChild(card);
+    });
+  }
+
+  // ---- year view ----
+  function cellFor(d, r, t) {
+    var c = document.createElement("button"); c.type = "button";
+    var k = keyOf(d), v = r[k];
+    c.className = "cell" + (v ? " v" + v : "") + (k === t ? " today" : "") + (k > t ? " future" : "") + (selection[k] ? " sel" : "");
+    c.dataset.k = k;
+    var label = WD[d.getDay()] + " " + d.getDate() + " " + MO[d.getMonth()] + ": " + (v ? v + " من 10" : "بدون تقييم");
+    c.title = label; c.setAttribute("aria-label", label);
+    return c;
+  }
+  function blank() { var c = document.createElement("span"); c.className = "cell out"; return c; }
+  function renderYear() {
+    var r = ratingsOf(current), y = viewYear, t = todayKey();
+    $("yr").textContent = y;
+    $("nextYear").disabled = y >= new Date().getFullYear();
+    $("lay-h").setAttribute("aria-pressed", layout === "h"); $("lay-v").setAttribute("aria-pressed", layout === "v");
+    var start = new Date(y, 0, 1), lead = start.getDay();
+    var days = Math.round((new Date(y + 1, 0, 1) - start) / 86400000), weeks = Math.ceil((lead + days) / 7);
+    var host = $("mapscroll"); host.innerHTML = "";
+
+    if (layout === "h") {
+      var map = document.createElement("div"); map.className = "hmap";
+      var months = document.createElement("div"); months.className = "months"; months.style.width = (weeks * 14) + "px";
+      var dl = document.createElement("div"); dl.className = "dl";
+      WD_SHORT.forEach(function (n, i) { var s = document.createElement("span"); s.textContent = i % 2 ? n : ""; dl.appendChild(s); });
+      var grid = document.createElement("div"); grid.className = "grid";
+      for (var i = 0; i < weeks * 7; i++) {
+        var idx = i - lead;
+        if (idx < 0 || idx >= days) { grid.appendChild(blank()); continue; }
+        var d = new Date(y, 0, 1 + idx);
+        if (d.getDate() === 1) { var m = document.createElement("span"); m.textContent = MO[d.getMonth()]; m.style.right = (Math.floor(i / 7) * 14) + "px"; months.appendChild(m); }
+        grid.appendChild(cellFor(d, r, t));
+      }
+      var spacer = document.createElement("div");
+      map.append(spacer, months, dl, grid);
+      host.appendChild(map);
+      if (scrollPending) { scrollPending = false; var tc = grid.querySelector(".today") || grid.querySelector("button.cell:last-child"); if (tc) { var hr = host.getBoundingClientRect(), cr = tc.getBoundingClientRect(); host.scrollLeft += (cr.left - hr.left) - hr.width / 2; } }
+    } else {
+      var vm = document.createElement("div"); vm.className = "vmap";
+      vm.appendChild(document.createElement("span"));
+      WD_SHORT.forEach(function (n) { var h = document.createElement("div"); h.className = "hd"; h.textContent = n.slice(0, 2); h.title = n; vm.appendChild(h); });
+      for (var w = 0; w < weeks; w++) {
+        var mo = document.createElement("div"); mo.className = "mo";
+        for (var j = 0; j < 7; j++) { var ix = w * 7 + j - lead; if (ix >= 0 && ix < days && new Date(y, 0, 1 + ix).getDate() === 1) mo.textContent = MO[new Date(y, 0, 1 + ix).getMonth()]; }
+        vm.appendChild(mo);
+        for (var j2 = 0; j2 < 7; j2++) {
+          var ix2 = w * 7 + j2 - lead;
+          vm.appendChild(ix2 < 0 || ix2 >= days ? blank() : cellFor(new Date(y, 0, 1 + ix2), r, t));
+        }
+      }
+      host.appendChild(vm);
+    }
+
+    var vals = [], good = 0;
+    for (var k2 in r) if (k2.indexOf(y + "-") === 0) { vals.push(r[k2]); if (r[k2] >= 8) good++; }
+    $("sDays").textContent = vals.length;
+    $("sAvg").textContent = vals.length ? (vals.reduce(function (a, b) { return a + b; }, 0) / vals.length).toFixed(1) : "–";
+    $("sGood").textContent = good;
+    var last = [];
+    for (var q = 0; q < 30; q++) { var rv = r[addDays(t, -q)]; if (rv) last.push(rv); }
+    $("s30").textContent = last.length ? (last.reduce(function (a, b) { return a + b; }, 0) / last.length).toFixed(1) : "–";
+    renderBulk();
+  }
+
+  // ---- selecting several days and rating them together ----
+  function renderBulk() {
+    var n = Object.keys(selection).length, show = n > 0 && !$("view-year").hidden;
+    $("bulkbar").hidden = !show; $("wrap").classList.toggle("withbar", show);
+    if (!show) return;
+    $("selCount").textContent = n === 1 ? "يوم واحد محدد" : n === 2 ? "يومان محددان" : n + " أيام محددة";
+    var sc = $("bulkScale"); sc.innerHTML = "";
+    scaleButtons(sc, 0, function (v) { applyBulk(v); });
+  }
+  function applyBulk(v) {
+    var keys = Object.keys(selection);
+    setRatings(current, keys, v);
+    selection = {};
+    render();
+    setStatus(v ? "تم تقييم " + keys.length + " يوم بـ " + v : "تم مسح تقييم " + keys.length + " يوم");
+  }
+  function selectRange(a, b) {
+    var t = todayKey(); if (a > b) { var x = a; a = b; b = x; }
+    if (b > t) b = t;
+    selection = {};
+    for (var k = a, guard = 0; k <= b && guard < 400; k = addDays(k, 1), guard++) selection[k] = true;
+    viewYear = +b.slice(0, 4);
+    render();
+  }
+  $("mapscroll").addEventListener("click", function (e) {
+    var c = e.target.closest("button.cell"); if (!c || c.dataset.k > todayKey()) return;
+    if (selection[c.dataset.k]) delete selection[c.dataset.k]; else selection[c.dataset.k] = true;
+    c.classList.toggle("sel");
+    renderBulk();
+  });
+  $("pickLast").onclick = function () {
+    var n = Math.min(366, Math.max(1, parseInt($("lastN").value, 10) || 1)), t = todayKey();
+    selectRange(addDays(t, -(n - 1)), t);
+  };
+  $("pickRange").onclick = function () { var a = $("fromD").value, b = $("toD").value; if (a && b) selectRange(a, b); else setStatus("اختر تاريخ البداية والنهاية", true); };
+  $("selCancel").onclick = function () { selection = {}; render(); };
+  $("selClear").onclick = function () { applyBulk(0); };
+  $("lay-h").onclick = function () { layout = "h"; scrollPending = true; writeLocal(); renderYear(); };
+  $("lay-v").onclick = function () { layout = "v"; writeLocal(); renderYear(); };
+  $("prevYear").onclick = function () { viewYear--; renderYear(); };
+  $("nextYear").onclick = function () { if (viewYear < new Date().getFullYear()) { viewYear++; renderYear(); } };
+
+  // ---- routing ----
+  function route() {
+    var year = location.hash === "#year";
+    $("view-today").hidden = year; $("view-year").hidden = !year;
+    $(year ? "tab-year" : "tab-today").setAttribute("aria-current", "page");
+    $(year ? "tab-today" : "tab-year").removeAttribute("aria-current");
+    if (!year) selection = {}; else scrollPending = true;
+    render();
+  }
+  function render() {
+    renderChips();
+    if (!$("view-today").hidden) renderToday();
+    if (!$("view-year").hidden) renderYear(); else renderBulk();
+    var t = todayKey(); $("toD").max = t; $("fromD").max = t;
+  }
+  window.addEventListener("hashchange", route);
+  // a new day opens a new entry and closes yesterday's
+  var lastDay = todayKey();
+  setInterval(function () { if (todayKey() !== lastDay) { lastDay = todayKey(); reopened = {}; render(); } }, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && todayKey() !== lastDay) { lastDay = todayKey(); reopened = {}; render(); } });
+
+  readLocal();
+  route();
+
+  // ---- account store, private to each person ----
+  function onServer(snap) {
+    var seen = {};
+    snap.docs.forEach(function (doc) {
+      var id = doc.id; seen[id] = true;
+      if (id === "meta" || tomb[id]) return;
+      if (!(id.indexOf("tr_") === 0 || YEAR_RE.test(id))) return;
+      var body = clone(doc.data() || {}), sts = body.ts || 0;
+      if ((localTs[id] || 0) > sts) { if (!(id in dirty) && inflight !== id) queue(id, "set"); return; }
+      docs[id] = body; localTs[id] = sts; confirmed[id] = true;
+    });
+    Object.keys(docs).forEach(function (id) {
+      if (seen[id]) return;
+      if (confirmed[id] && !(id in dirty) && inflight !== id && Date.now() - (localTs[id] || 0) > 120000) { delete docs[id]; delete localTs[id]; delete confirmed[id]; }
+      else if (!(id in dirty) && inflight !== id) queue(id, "set");
+    });
+    if (!tracker(current)) current = "sleep";
+    writeLocal(); render();
+    if (!Object.keys(dirty).length && !inflight) setStatus("محفوظ في حسابك ✓");
+  }
+  (async function () {
+    var localOnly = "الحفظ في الحساب غير متاح هنا، والتقييمات محفوظة على هذا الجهاز فقط";
+    if (!window.claude || !window.claude.use) { setStatus(localOnly, true); return; }
+    try {
+      var d = await window.claude.use("db"), u = await window.claude.use("user");
+      var id = u ? await u.id() : null;
+      if (!d || !id) { setStatus(localOnly, true); return; }
+      db = d; uid = id;
+      if (Object.keys(dirty).length) { clearTimeout(timer); timer = setTimeout(flush, 400); }
+      db.collection("data/users/" + uid).onSnapshot(onServer, function () { setStatus("انقطع الاتصال بحسابك، التقييمات محفوظة على هذا الجهاز", true); db = null; });
+    } catch (e) { setStatus(localOnly, true); }
+  })();
+})();
+</script>
+</body>
+</html>
